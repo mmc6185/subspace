@@ -2,7 +2,8 @@ use futures::future::{Future, Ready};
 use sc_client_api::{BlockBackend, HeaderBackend, UsageProvider};
 use sc_service::Configuration;
 use sc_transaction_pool::{
-    error::Result as TxPoolResult, BasicPool, ChainApi, FullChainApi, RevalidationType, Transaction,
+    error::Result as TxPoolResult, BasicPool, ChainApi, FullChainApi, Pool, RevalidationType,
+    Transaction,
 };
 use sc_transaction_pool_api::{
     ChainEvent, ImportNotificationStream, MaintainedTransactionPool, PoolFuture, PoolStatus,
@@ -142,6 +143,11 @@ where
         );
 
         Self { inner: basic_pool }
+    }
+
+    /// Gets shared reference to the underlying pool.
+    pub fn pool(&self) -> &Arc<Pool<PoolApi>> {
+        self.inner.pool()
     }
 }
 
