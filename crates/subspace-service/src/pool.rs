@@ -1,7 +1,9 @@
 use futures::future::{Future, Ready};
 use sc_client_api::{BlockBackend, HeaderBackend};
 use sc_service::Configuration;
-use sc_transaction_pool::{error::Result as PoolResult, BasicPool, ChainApi, FullChainApi};
+use sc_transaction_pool::{
+    error::Result as PoolResult, BasicPool, ChainApi, FullChainApi, RevalidationType,
+};
 use sp_api::ProvideRuntimeApi;
 use sp_core::traits::SpawnEssentialNamed;
 use sp_runtime::{
@@ -105,11 +107,22 @@ where
         + 'static,
     Client::Api: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>,
 {
-    sc_transaction_pool::BasicPool::new_full(
+    let prometheus = config.prometheus_registry();
+    let pool_api = Arc::new(FullChainApi::new(client.clone(), prometheus, &spawner));
+    let pool = Arc::new(BasicPool::with_revalidation_type(
         config.transaction_pool.clone(),
         config.role.is_authority().into(),
-        config.prometheus_registry(),
+        pool_api,
+        prometheus,
+        RevalidationType::Full,
         spawner,
-        client,
-    )
+        client.usage_info().chain.best_number,
+    ));
+
+    // make transaction pool available for off-chain runtime calls.
+    client
+        .execution_extensions()
+        .register_transaction_pool(&pool);
+
+    pool
 }
