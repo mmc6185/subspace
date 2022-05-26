@@ -19,6 +19,7 @@
 mod pool;
 pub mod rpc;
 
+pub use self::pool::FullPool;
 use cirrus_primitives::Hash as SecondaryHash;
 use derive_more::{Deref, DerefMut, Into};
 use frame_system_rpc_runtime_api::AccountNonceApi;
