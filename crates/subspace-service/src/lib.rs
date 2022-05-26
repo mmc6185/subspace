@@ -282,7 +282,7 @@ where
         + BlockIdTo<Block>
         + HeaderBackend<Block>
         + 'static,
-    C::Api: TaggedTransactionQueue<Block>,
+    C::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     /// Task manager.
     pub task_manager: TaskManager,

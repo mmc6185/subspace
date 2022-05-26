@@ -67,7 +67,7 @@ where
         + Send
         + Sync
         + 'static,
-    Client::Api: TaggedTransactionQueue<Block>,
+    Client::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     type Block = Block;
     type Error = sc_transaction_pool::error::Error;
@@ -84,6 +84,7 @@ where
         source: TransactionSource,
         uxt: ExtrinsicFor<Self>,
     ) -> Self::ValidationFuture {
+        println!("========== uxt: {:?}", uxt);
         // TODO: pre-validation
 
         self.inner.validate_transaction(at, source, uxt)
@@ -160,7 +161,7 @@ where
         + sc_client_api::blockchain::HeaderBackend<Block>
         + sp_runtime::traits::BlockIdTo<Block>,
     Client: Send + Sync + 'static,
-    Client::Api: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>,
+    Client::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     type Block = Block;
     type Hash = ExtrinsicHash<FullChainApiWrapper<Block, Client>>;
@@ -312,7 +313,7 @@ where
         + Send
         + Sync
         + 'static,
-    Client::Api: sp_transaction_pool::runtime_api::TaggedTransactionQueue<Block>,
+    Client::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     let prometheus = config.prometheus_registry();
     let pool_api = Arc::new(FullChainApiWrapper::new(

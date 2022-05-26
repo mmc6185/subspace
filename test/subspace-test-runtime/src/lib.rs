@@ -1074,6 +1074,10 @@ impl_runtime_apis! {
             extract_bundles(extrinsics)
         }
 
+        fn extract_fraud_proof(ext: &<Block as BlockT>::Extrinsic) -> Option<sp_executor::FraudProof> {
+            todo!()
+        }
+
         fn extrinsics_shuffling_seed(header: <Block as BlockT>::Header) -> Randomness {
             extrinsics_shuffling_seed::<Block>(header)
         }
