@@ -1,5 +1,5 @@
 use futures::future::{Future, Ready};
-use sc_client_api::{BlockBackend, HeaderBackend, UsageProvider};
+use sc_client_api::{BlockBackend, ExecutorProvider, HeaderBackend, UsageProvider};
 use sc_service::Configuration;
 use sc_transaction_pool::{
     error::Result as TxPoolResult, BasicPool, ChainApi, FullChainApi, Pool, RevalidationType,
@@ -11,6 +11,7 @@ use sc_transaction_pool_api::{
 };
 use sp_api::ProvideRuntimeApi;
 use sp_core::traits::SpawnEssentialNamed;
+use sp_executor::ExecutorApi;
 use sp_runtime::{
     generic::BlockId,
     traits::{Block as BlockT, BlockIdTo, NumberFor},
@@ -32,7 +33,8 @@ pub type ExtrinsicHash<A> = <<A as ChainApi>::Block as BlockT>::Hash;
 pub type ExtrinsicFor<A> = <<A as ChainApi>::Block as BlockT>::Extrinsic;
 
 /// A transaction pool for a full node.
-pub type FullPool<Block, Client> = BasicPoolWrapper<Block, FullChainApiWrapper<Block, Client>>;
+pub type FullPool<Block, PoolClient, Client> =
+    BasicPoolWrapper<Block, FullChainApiWrapper<Block, PoolClient, Client>>;
 
 type BoxedReadyIterator<Hash, Data> =
     Box<dyn ReadyTransactions<Item = Arc<Transaction<Hash, Data>>> + Send>;
@@ -41,33 +43,38 @@ type ReadyIteratorFor<PoolApi> = BoxedReadyIterator<ExtrinsicHash<PoolApi>, Extr
 
 type PolledIterator<PoolApi> = Pin<Box<dyn Future<Output = ReadyIteratorFor<PoolApi>> + Send>>;
 
-pub struct FullChainApiWrapper<Block, Client> {
-    inner: FullChainApi<Client, Block>,
+pub struct FullChainApiWrapper<Block, PoolClient, Client> {
+    inner: FullChainApi<PoolClient, Block>,
+    client: Arc<Client>,
 }
 
-impl<Block, Client> FullChainApiWrapper<Block, Client> {
+impl<Block, PoolClient, Client> FullChainApiWrapper<Block, PoolClient, Client> {
     pub fn new(
+        pool_client: Arc<PoolClient>,
         client: Arc<Client>,
         prometheus: Option<&PrometheusRegistry>,
         spawner: &impl SpawnEssentialNamed,
     ) -> Self {
         Self {
-            inner: FullChainApi::new(client, prometheus, spawner),
+            inner: FullChainApi::new(pool_client, prometheus, spawner),
+            client,
         }
     }
 }
 
-impl<Block, Client> ChainApi for FullChainApiWrapper<Block, Client>
+impl<Block, PoolClient, Client> ChainApi for FullChainApiWrapper<Block, PoolClient, Client>
 where
     Block: BlockT,
-    Client: ProvideRuntimeApi<Block>
+    PoolClient: ProvideRuntimeApi<Block>
         + BlockBackend<Block>
         + BlockIdTo<Block>
         + HeaderBackend<Block>
         + Send
         + Sync
         + 'static,
-    Client::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
+    PoolClient::Api: TaggedTransactionQueue<Block>,
+    Client: ProvideRuntimeApi<Block> + Send + Sync + 'static,
+    Client::Api: ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     type Block = Block;
     type Error = sc_transaction_pool::error::Error;
@@ -84,7 +91,12 @@ where
         source: TransactionSource,
         uxt: ExtrinsicFor<Self>,
     ) -> Self::ValidationFuture {
-        println!("========== uxt: {:?}", uxt);
+        let maybe_fraud_proof = self
+            .client
+            .runtime_api()
+            .extract_fraud_proof(at, &uxt)
+            .unwrap();
+        println!("========== maybe_fraud_proof: {:?}", maybe_fraud_proof);
         // TODO: pre-validation
 
         self.inner.validate_transaction(at, source, uxt)
@@ -126,12 +138,12 @@ where
     Block: BlockT,
     PoolApi: ChainApi<Block = Block> + 'static,
 {
-    pub fn with_revalidation_type<Client: UsageProvider<Block>>(
+    pub fn with_revalidation_type<PoolClient: UsageProvider<Block>>(
         config: &Configuration,
         pool_api: Arc<PoolApi>,
         prometheus: Option<&PrometheusRegistry>,
         spawner: impl SpawnEssentialNamed,
-        client: Arc<Client>,
+        client: Arc<PoolClient>,
     ) -> Self {
         let basic_pool = BasicPool::with_revalidation_type(
             config.transaction_pool.clone(),
@@ -152,20 +164,24 @@ where
     }
 }
 
-impl<Block, Client> sc_transaction_pool_api::LocalTransactionPool
-    for BasicPoolWrapper<Block, FullChainApiWrapper<Block, Client>>
+impl<Block, PoolClient, Client> sc_transaction_pool_api::LocalTransactionPool
+    for BasicPoolWrapper<Block, FullChainApiWrapper<Block, PoolClient, Client>>
 where
     Block: BlockT,
-    Client: sp_api::ProvideRuntimeApi<Block>
-        + sc_client_api::BlockBackend<Block>
-        + sc_client_api::blockchain::HeaderBackend<Block>
-        + sp_runtime::traits::BlockIdTo<Block>,
-    Client: Send + Sync + 'static,
-    Client::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
+    PoolClient: ProvideRuntimeApi<Block>
+        + BlockBackend<Block>
+        + HeaderBackend<Block>
+        + BlockIdTo<Block>
+        + Send
+        + Sync
+        + 'static,
+    PoolClient::Api: TaggedTransactionQueue<Block>,
+    Client: ProvideRuntimeApi<Block> + Send + Sync + 'static,
+    Client::Api: ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     type Block = Block;
-    type Hash = ExtrinsicHash<FullChainApiWrapper<Block, Client>>;
-    type Error = <FullChainApiWrapper<Block, Client> as ChainApi>::Error;
+    type Hash = ExtrinsicHash<FullChainApiWrapper<Block, PoolClient, Client>>;
+    type Error = <FullChainApiWrapper<Block, PoolClient, Client> as ChainApi>::Error;
 
     fn submit_local(
         &self,
@@ -297,27 +313,31 @@ where
     }
 }
 
-pub(super) fn new_full<Block, Client>(
+pub(super) fn new_full<Block, PoolClient, Client>(
     config: &Configuration,
     spawner: impl SpawnEssentialNamed,
+    pool_client: Arc<PoolClient>,
     client: Arc<Client>,
-) -> Arc<BasicPoolWrapper<Block, FullChainApiWrapper<Block, Client>>>
+) -> Arc<BasicPoolWrapper<Block, FullChainApiWrapper<Block, PoolClient, Client>>>
 where
     Block: BlockT,
-    Client: sp_api::ProvideRuntimeApi<Block>
-        + sc_client_api::BlockBackend<Block>
-        + sc_client_api::blockchain::HeaderBackend<Block>
-        + sp_runtime::traits::BlockIdTo<Block>
-        + sc_client_api::ExecutorProvider<Block>
-        + sc_client_api::UsageProvider<Block>
+    PoolClient: ProvideRuntimeApi<Block>
+        + BlockBackend<Block>
+        + HeaderBackend<Block>
+        + BlockIdTo<Block>
+        + ExecutorProvider<Block>
+        + UsageProvider<Block>
         + Send
         + Sync
         + 'static,
-    Client::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
+    PoolClient::Api: TaggedTransactionQueue<Block>,
+    Client: ProvideRuntimeApi<Block> + Send + Sync + 'static,
+    Client::Api: ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     let prometheus = config.prometheus_registry();
     let pool_api = Arc::new(FullChainApiWrapper::new(
-        client.clone(),
+        pool_client.clone(),
+        client,
         prometheus,
         &spawner,
     ));
@@ -326,11 +346,11 @@ where
         pool_api,
         prometheus,
         spawner,
-        client.clone(),
+        pool_client.clone(),
     ));
 
     // make transaction pool available for off-chain runtime calls.
-    client
+    pool_client
         .execution_extensions()
         .register_transaction_pool(&pool);
 

@@ -124,7 +124,11 @@ pub fn new_partial<RuntimeApi, ExecutorDispatch>(
         FullBackend,
         FullSelectChain,
         DefaultImportQueue<Block, FullClient<RuntimeApi, ExecutorDispatch>>,
-        FullPool<Block, FullClient<RuntimeApi, ExecutorDispatch>>,
+        FullPool<
+            Block,
+            FullClient<RuntimeApi, ExecutorDispatch>,
+            FullClient<RuntimeApi, ExecutorDispatch>,
+        >,
         (
             impl BlockImport<
                 Block,
@@ -203,6 +207,7 @@ where
         config,
         task_manager.spawn_essential_handle(),
         client.clone(),
+        client.clone(),
     );
 
     let (block_import, subspace_link) = sc_consensus_subspace::block_import(
@@ -275,14 +280,16 @@ where
 }
 
 /// Full node along with some other components.
-pub struct NewFull<C>
+pub struct NewFull<C, TxPoolC>
 where
     C: ProvideRuntimeApi<Block>
         + BlockBackend<Block>
         + BlockIdTo<Block>
         + HeaderBackend<Block>
         + 'static,
-    C::Api: TaggedTransactionQueue<Block> + sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
+    C::Api: TaggedTransactionQueue<Block>,
+    TxPoolC: ProvideRuntimeApi<Block> + Send + Sync + 'static,
+    TxPoolC::Api: sp_executor::ExecutorApi<Block, cirrus_primitives::Hash>,
 {
     /// Task manager.
     pub task_manager: TaskManager,
@@ -309,14 +316,17 @@ where
     /// Network starter.
     pub network_starter: NetworkStarter,
     /// Transaction pool.
-    pub transaction_pool: Arc<FullPool<Block, C>>,
+    pub transaction_pool: Arc<FullPool<Block, C, TxPoolC>>,
 }
 
 /// Builds a new service for a full client.
 pub fn new_full<RuntimeApi, ExecutorDispatch>(
     config: SubspaceConfiguration,
     enable_rpc_extensions: bool,
-) -> Result<NewFull<FullClient<RuntimeApi, ExecutorDispatch>>, Error>
+) -> Result<
+    NewFull<FullClient<RuntimeApi, ExecutorDispatch>, FullClient<RuntimeApi, ExecutorDispatch>>,
+    Error,
+>
 where
     RuntimeApi: ConstructRuntimeApi<Block, FullClient<RuntimeApi, ExecutorDispatch>>
         + Send

@@ -62,7 +62,7 @@ pub type Client = FullClient<subspace_test_runtime::RuntimeApi, TestExecutorDisp
 pub type Backend = sc_service::TFullBackend<Block>;
 
 /// Run a farmer.
-pub fn start_farmer(new_full: &NewFull<Client>) {
+pub fn start_farmer(new_full: &NewFull<Client, Client>) {
     let client = new_full.client.clone();
     let new_slot_notification_stream = new_full.new_slot_notification_stream.clone();
     let reward_signing_notification_stream = new_full.reward_signing_notification_stream.clone();

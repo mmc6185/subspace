@@ -344,6 +344,21 @@ async fn execution_proof_creation_and_verification_should_work() {
 		execution_phase,
 	};
 	assert!(proof_verifier.verify(&fraud_proof).is_ok());
+
+	let tx = subspace_test_runtime::UncheckedExtrinsic::new_unsigned(
+		pallet_executor::Call::submit_fraud_proof { fraud_proof }.into(),
+	);
+
+	println!("======================= Sending fraud_proof tx");
+	alice
+		.transaction_pool
+		.pool()
+		.submit_one(
+			&BlockId::Hash(alice.client.info().best_hash),
+			TransactionSource::External,
+			tx.into(),
+		)
+		.await;
 }
 
 #[substrate_test_utils::test(flavor = "multi_thread")]
