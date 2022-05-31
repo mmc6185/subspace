@@ -392,7 +392,7 @@ sp_api::decl_runtime_apis! {
         /// Extract the bundles from extrinsics in a block.
         fn extract_bundles(extrinsics: Vec<OpaqueExtrinsic>) -> Vec<OpaqueBundle>;
 
-        /// 
+        ///
         fn extract_fraud_proof(ext: &Block::Extrinsic) -> Option<FraudProof>;
 
         /// Generates a randomness seed for extrinsics shuffling.

@@ -1,10 +1,8 @@
 use futures::future::{Future, Ready};
 use sc_client_api::{BlockBackend, ExecutorProvider, HeaderBackend, UsageProvider};
 use sc_service::Configuration;
-use sc_transaction_pool::{
-    error::Result as TxPoolResult, BasicPool, ChainApi, FullChainApi, Pool, RevalidationType,
-    Transaction,
-};
+use sc_transaction_pool::error::Result as TxPoolResult;
+use sc_transaction_pool::{BasicPool, ChainApi, FullChainApi, Pool, RevalidationType, Transaction};
 use sc_transaction_pool_api::{
     ChainEvent, ImportNotificationStream, MaintainedTransactionPool, PoolFuture, PoolStatus,
     ReadyTransactions, TransactionFor, TransactionPool, TransactionStatusStreamFor, TxHash,
@@ -12,11 +10,9 @@ use sc_transaction_pool_api::{
 use sp_api::ProvideRuntimeApi;
 use sp_core::traits::SpawnEssentialNamed;
 use sp_executor::ExecutorApi;
-use sp_runtime::{
-    generic::BlockId,
-    traits::{Block as BlockT, BlockIdTo, NumberFor},
-    transaction_validity::{TransactionSource, TransactionValidity},
-};
+use sp_runtime::generic::BlockId;
+use sp_runtime::traits::{Block as BlockT, BlockIdTo, NumberFor};
+use sp_runtime::transaction_validity::{TransactionSource, TransactionValidity};
 use sp_transaction_pool::runtime_api::TaggedTransactionQueue;
 use std::collections::HashMap;
 use std::pin::Pin;
@@ -96,8 +92,11 @@ where
             .runtime_api()
             .extract_fraud_proof(at, &uxt)
             .unwrap();
-        println!("========== maybe_fraud_proof: {:?}", maybe_fraud_proof);
-        // TODO: pre-validation
+
+        if let Some(fraud_proof) = maybe_fraud_proof {
+            // TODO: pre-validation
+            println!("========== fraud_proof: {:?}", fraud_proof);
+        }
 
         self.inner.validate_transaction(at, source, uxt)
     }
