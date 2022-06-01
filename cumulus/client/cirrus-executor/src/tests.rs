@@ -350,7 +350,7 @@ async fn execution_proof_creation_and_verification_should_work() {
 	);
 
 	println!("======================= Sending fraud_proof tx");
-	alice
+	ferdie
 		.transaction_pool
 		.pool()
 		.submit_one(
