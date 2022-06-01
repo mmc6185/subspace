@@ -8215,6 +8215,7 @@ dependencies = [
  "frame-system-rpc-runtime-api",
  "futures 0.3.21",
  "jsonrpsee",
+ "pallet-executor",
  "pallet-transaction-payment-rpc",
  "pallet-transaction-payment-rpc-runtime-api",
  "parity-util-mem",
@@ -8254,6 +8255,7 @@ dependencies = [
  "substrate-frame-rpc-system",
  "substrate-prometheus-endpoint",
  "thiserror",
+ "tracing",
 ]
 
 [[package]]
@@ -8362,7 +8364,6 @@ dependencies = [
  "sc-network",
  "sc-service",
  "sc-tracing",
- "sc-transaction-pool",
  "sp-arithmetic",
  "sp-blockchain",
  "sp-keyring",

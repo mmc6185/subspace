@@ -343,7 +343,8 @@ async fn execution_proof_creation_and_verification_should_work() {
 		parent_number: parent_number_alice,
 		parent_hash: parent_hash_alice,
 		pre_state_root: intermediate_roots.last().unwrap().into(),
-		post_state_root: post_execution_root,
+		// post_state_root: post_execution_root,
+		post_state_root: Hash::random(),
 		proof: storage_proof,
 		execution_phase,
 	};
@@ -362,7 +363,8 @@ async fn execution_proof_creation_and_verification_should_work() {
 			TransactionSource::External,
 			tx.into(),
 		)
-		.await;
+		.await
+		.expect("Submit fraud proof extrinsic successfully");
 }
 
 #[substrate_test_utils::test(flavor = "multi_thread")]
