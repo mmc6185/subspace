@@ -22,7 +22,7 @@ frame-support = { version = "4.0.0-dev", git = "https://github.com/subspace/subs
 futures = "0.3.21"
 jsonrpsee = { version = "0.13.1", features = ["server"] }
 pallet-executor = { version = "0.1.0", path = "../pallet-executor" }
-pallet-transaction-payment-rpc = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate", rev = "24bea4c3cba7479e2cf2976a21e8111dfda6b1cd" }
+pallet-transaction-payment-rpc = { version = "4.0.0-dev", git = "https://github.com/subspace/substrate", rev = "24bea4c3cba7479e2cf2976a21e8111dfda6b1cd" }
 parity-util-mem = { version = "0.11.0", default-features = false, features = ["primitive-types"] }
 sc-basic-authorship = { version = "0.10.0-dev", git = "https://github.com/subspace/substrate", rev = "24bea4c3cba7479e2cf2976a21e8111dfda6b1cd" }
 sc-client-api = { version = "4.0.0-dev", git = "https://github.com/subspace/substrate", rev = "24bea4c3cba7479e2cf2976a21e8111dfda6b1cd" }
