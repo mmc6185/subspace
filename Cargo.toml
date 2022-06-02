@@ -18,6 +18,74 @@ members = [
     "test/subspace-test-service",
 ]
 
+[patch."https://github.com/subspace/substrate"]
+sc-basic-authorship = { path = "/home/xlc/src/github.com/subspace/substrate/client/basic-authorship" }
+sc-block-builder = { path = "/home/xlc/src/github.com/subspace/substrate/client/block-builder" }
+sc-chain-spec = { path = "/home/xlc/src/github.com/subspace/substrate/client/chain-spec" }
+sc-cli = { path = "/home/xlc/src/github.com/subspace/substrate/client/cli" }
+sc-client-api = { path = "/home/xlc/src/github.com/subspace/substrate/client/api" }
+sc-client-db = { path = "/home/xlc/src/github.com/subspace/substrate/client/db" }
+sc-consensus = { path = "/home/xlc/src/github.com/subspace/substrate/client/consensus/common" }
+sc-consensus-slots = { path = "/home/xlc/src/github.com/subspace/substrate/client/consensus/slots" }
+sc-executor = { path = "/home/xlc/src/github.com/subspace/substrate/client/executor" }
+sc-informant = { path = "/home/xlc/src/github.com/subspace/substrate/client/informant" }
+sc-keystore = { path = "/home/xlc/src/github.com/subspace/substrate/client/keystore" }
+sc-network = { path = "/home/xlc/src/github.com/subspace/substrate/client/network" }
+sc-network-common = { path = "/home/xlc/src/github.com/subspace/substrate/client/network/common" }
+sc-network-gossip = { path = "/home/xlc/src/github.com/subspace/substrate/client/network-gossip" }
+sc-offchain = { path = "/home/xlc/src/github.com/subspace/substrate/client/offchain" }
+sc-rpc = { path = "/home/xlc/src/github.com/subspace/substrate/client/rpc" }
+sc-rpc-api = { path = "/home/xlc/src/github.com/subspace/substrate/client/rpc-api" }
+sc-service = { path = "/home/xlc/src/github.com/subspace/substrate/client/service" }
+sc-telemetry = { path = "/home/xlc/src/github.com/subspace/substrate/client/telemetry" }
+sc-tracing = { path = "/home/xlc/src/github.com/subspace/substrate/client/tracing" }
+sc-transaction-pool = { path = "/home/xlc/src/github.com/subspace/substrate/client/transaction-pool" }
+sc-transaction-pool-api = { path = "/home/xlc/src/github.com/subspace/substrate/client/transaction-pool/api" }
+
+sp-api = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/api" }
+sp-application-crypto = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/application-crypto" }
+sp-arithmetic = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/arithmetic" }
+sp-block-builder = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/block-builder" }
+sp-blockchain = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/blockchain" }
+sp-consensus = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/consensus/common" }
+sp-consensus-slots = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/consensus/slots" }
+sp-core = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/core" }
+sp-externalities = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/externalities" }
+sp-inherents = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/inherents" }
+sp-io = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/io" }
+sp-keystore = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/keystore" }
+sp-keyring = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/keyring" }
+sp-offchain = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/offchain" }
+sp-rpc = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/rpc" }
+sp-runtime = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/runtime" }
+sp-runtime-interface = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/runtime-interface" }
+sp-session = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/session" }
+sp-state-machine = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/state-machine" }
+sp-std = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/std" }
+sp-storage = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/storage" }
+sp-timestamp = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/timestamp" }
+sp-tracing = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/tracing" }
+sp-transaction-pool = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/transaction-pool" }
+sp-trie = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/trie" }
+sp-version = { path = "/home/xlc/src/github.com/subspace/substrate/primitives/version" }
+
+frame-benchmarking-cli = { path = "/home/xlc/src/github.com/subspace/substrate/utils/frame/benchmarking-cli" }
+frame-executive = { path = "/home/xlc/src/github.com/subspace/substrate/frame/executive" }
+frame-support = { path = "/home/xlc/src/github.com/subspace/substrate/frame/support" }
+frame-system = { path = "/home/xlc/src/github.com/subspace/substrate/frame/system" }
+frame-system-rpc-runtime-api = { path = "/home/xlc/src/github.com/subspace/substrate/frame/system/rpc/runtime-api" }
+
+substrate-frame-rpc-system = { path = "/home/xlc/src/github.com/subspace/substrate/utils/frame/rpc/system" }
+
+pallet-balances = { path = "/home/xlc/src/github.com/subspace/substrate/frame/balances" }
+pallet-session = { path = "/home/xlc/src/github.com/subspace/substrate/frame/session" }
+pallet-sudo = { path = "/home/xlc/src/github.com/subspace/substrate/frame/sudo" }
+pallet-timestamp = { path = "/home/xlc/src/github.com/subspace/substrate/frame/timestamp" }
+pallet-transaction-payment = { path = "/home/xlc/src/github.com/subspace/substrate/frame/transaction-payment" }
+pallet-transaction-payment-rpc = { path = "/home/xlc/src/github.com/subspace/substrate/frame/transaction-payment/rpc" }
+pallet-transaction-payment-rpc-runtime-api = { path = "/home/xlc/src/github.com/subspace/substrate/frame/transaction-payment/rpc/runtime-api" }
+pallet-utility = { path = "/home/xlc/src/github.com/subspace/substrate/frame/utility" }
+
 # The list of dependencies below (which can be both direct and indirect dependencies) are crates
 # that are suspected to be CPU-intensive, and that are unlikely to require debugging (as some of
 # their debug info might be missing) or to require to be frequently recompiled. We compile these
