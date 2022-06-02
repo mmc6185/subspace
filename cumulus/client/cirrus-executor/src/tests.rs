@@ -241,12 +241,12 @@ async fn execution_proof_creation_and_verification_should_work() {
 	);
 
 	// Incorrect but it's fine for the test purpose.
-	let parent_hash_alice = ferdie.client.info().best_hash;
-	let parent_number_alice = ferdie.client.info().best_number;
+	let parent_hash_ferdie = ferdie.client.info().best_hash;
+	let parent_number_ferdie = ferdie.client.info().best_number;
 
 	let fraud_proof = FraudProof {
-		parent_number: parent_number_alice,
-		parent_hash: parent_hash_alice,
+		parent_number: parent_number_ferdie,
+		parent_hash: parent_hash_ferdie,
 		pre_state_root: *parent_header.state_root(),
 		post_state_root: intermediate_roots[0].into(),
 		proof: storage_proof,
@@ -292,8 +292,8 @@ async fn execution_proof_creation_and_verification_should_work() {
 		assert_eq!(post_execution_root, intermediate_roots[target_extrinsic_index + 1].into());
 
 		let fraud_proof = FraudProof {
-			parent_number: parent_number_alice,
-			parent_hash: parent_hash_alice,
+			parent_number: parent_number_ferdie,
+			parent_hash: parent_hash_ferdie,
 			pre_state_root: intermediate_roots[target_extrinsic_index].into(),
 			post_state_root: intermediate_roots[target_extrinsic_index + 1].into(),
 			proof: storage_proof,
@@ -336,8 +336,8 @@ async fn execution_proof_creation_and_verification_should_work() {
 	assert_eq!(post_execution_root, *header.state_root());
 
 	let fraud_proof = FraudProof {
-		parent_number: parent_number_alice,
-		parent_hash: parent_hash_alice,
+		parent_number: parent_number_ferdie,
+		parent_hash: parent_hash_ferdie,
 		pre_state_root: intermediate_roots.last().unwrap().into(),
 		post_state_root: post_execution_root,
 		proof: storage_proof,
@@ -349,17 +349,19 @@ async fn execution_proof_creation_and_verification_should_work() {
 		pallet_executor::Call::submit_fraud_proof { fraud_proof }.into(),
 	);
 
+	/*
 	println!("======================= Sending fraud_proof tx");
 	ferdie
 		.transaction_pool
 		.pool()
 		.submit_one(
-			&BlockId::Hash(alice.client.info().best_hash),
+			&BlockId::Hash(ferdie.client.info().best_hash),
 			TransactionSource::External,
 			tx.into(),
 		)
 		.await
 		.expect("Submit fraud proof extrinsic successfully");
+	*/
 }
 
 #[substrate_test_utils::test(flavor = "multi_thread")]
@@ -494,12 +496,12 @@ async fn invalid_execution_proof_should_not_work() {
 	);
 
 	// Incorrect but it's fine for the test purpose.
-	let parent_hash_alice = ferdie.client.info().best_hash;
-	let parent_number_alice = ferdie.client.info().best_number;
+	let parent_hash_ferdie = ferdie.client.info().best_hash;
+	let parent_number_ferdie = ferdie.client.info().best_number;
 
 	let fraud_proof = FraudProof {
-		parent_number: parent_number_alice,
-		parent_hash: parent_hash_alice,
+		parent_number: parent_number_ferdie,
+		parent_hash: parent_hash_ferdie,
 		pre_state_root: post_delta_root0,
 		post_state_root: post_delta_root1,
 		proof: proof1,
@@ -508,8 +510,8 @@ async fn invalid_execution_proof_should_not_work() {
 	assert!(proof_verifier.verify(&fraud_proof).is_err());
 
 	let fraud_proof = FraudProof {
-		parent_number: parent_number_alice,
-		parent_hash: parent_hash_alice,
+		parent_number: parent_number_ferdie,
+		parent_hash: parent_hash_ferdie,
 		pre_state_root: post_delta_root0,
 		post_state_root: post_delta_root1,
 		proof: proof0.clone(),
@@ -518,8 +520,8 @@ async fn invalid_execution_proof_should_not_work() {
 	assert!(proof_verifier.verify(&fraud_proof).is_err());
 
 	let fraud_proof = FraudProof {
-		parent_number: parent_number_alice,
-		parent_hash: parent_hash_alice,
+		parent_number: parent_number_ferdie,
+		parent_hash: parent_hash_ferdie,
 		pre_state_root: post_delta_root0,
 		post_state_root: post_delta_root1,
 		proof: proof0,
