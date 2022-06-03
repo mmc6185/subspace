@@ -344,14 +344,102 @@ async fn execution_proof_creation_and_verification_should_work() {
 		execution_phase,
 	};
 	assert!(proof_verifier.verify(&fraud_proof).is_ok());
+}
 
-	let tx = subspace_test_runtime::UncheckedExtrinsic::new_unsigned(
-		pallet_executor::Call::submit_fraud_proof { fraud_proof }.into(),
+#[substrate_test_utils::test(flavor = "multi_thread")]
+async fn fraud_proof_verification_in_tx_pool_should_work() {
+	let mut builder = sc_cli::LoggerBuilder::new("");
+	builder.with_colors(false);
+	let _ = builder.init();
+
+	let tokio_handle = tokio::runtime::Handle::current();
+
+	// Start Ferdie
+	let (ferdie, ferdie_network_starter) =
+		run_primary_chain_validator_node(tokio_handle.clone(), Ferdie, vec![]);
+	ferdie_network_starter.start_network();
+
+	// Run Alice (a secondary chain authority node)
+	let alice = cirrus_test_service::TestNodeBuilder::new(tokio_handle.clone(), Alice)
+		.connect_to_primary_chain_node(&ferdie)
+		.build(Role::Authority)
+		.await;
+
+	alice.wait_for_blocks(3).await;
+
+	let transfer = cirrus_test_service::construct_extrinsic(
+		&alice.client,
+		pallet_balances::Call::transfer {
+			dest: cirrus_test_service::runtime::Address::Id(Charlie.public().into()),
+			value: 8,
+		},
+		Alice,
+		false,
+		0,
 	);
 
-	/*
-	println!("======================= Sending fraud_proof tx");
-	ferdie
+	let best_hash = alice.client.info().best_hash;
+	let header = alice.client.header(&BlockId::Hash(best_hash)).unwrap().unwrap();
+	let parent_header =
+		alice.client.header(&BlockId::Hash(*header.parent_hash())).unwrap().unwrap();
+
+	let intermediate_roots = alice
+		.client
+		.runtime_api()
+		.intermediate_roots(&BlockId::Hash(best_hash))
+		.expect("Get intermediate roots");
+
+	let prover = subspace_fraud_proof::ExecutionProver::new(
+		alice.backend.clone(),
+		alice.code_executor.clone(),
+		Box::new(alice.task_manager.spawn_handle()),
+	);
+
+	let proof_verifier = subspace_fraud_proof::ProofVerifier::new(
+		ferdie.client.clone(),
+		ferdie.backend.clone(),
+		ferdie.executor.clone(),
+		ferdie.task_manager.spawn_handle(),
+	);
+
+	let new_header = Header::new(
+		*header.number(),
+		Default::default(),
+		Default::default(),
+		parent_header.hash(),
+		Default::default(),
+	);
+	let execution_phase = ExecutionPhase::InitializeBlock { call_data: new_header.encode() };
+
+	let storage_proof = prover
+		.prove_execution::<sp_trie::PrefixedMemoryDB<BlakeTwo256>>(
+			BlockId::Hash(parent_header.hash()),
+			&execution_phase,
+			None,
+		)
+		.expect("Create `initialize_block` proof");
+
+	let parent_hash_ferdie = ferdie.client.info().best_hash;
+	let parent_number_ferdie = ferdie.client.info().best_number;
+
+	let valid_fraud_proof = FraudProof {
+		parent_number: parent_number_ferdie,
+		parent_hash: parent_hash_ferdie,
+		pre_state_root: *parent_header.state_root(),
+		// post_state_root: intermediate_roots[0].into(),
+		post_state_root: Hash::random(),
+		proof: storage_proof,
+		execution_phase: execution_phase.clone(),
+	};
+
+	println!("=============== Verifying fraud_proof using proof_verifier");
+	assert!(proof_verifier.verify(&valid_fraud_proof).is_err());
+
+	let tx = subspace_test_runtime::UncheckedExtrinsic::new_unsigned(
+		pallet_executor::Call::submit_fraud_proof { fraud_proof: valid_fraud_proof }.into(),
+	);
+
+	let res = ferdie
 		.transaction_pool
 		.pool()
 		.submit_one(
@@ -359,9 +447,37 @@ async fn execution_proof_creation_and_verification_should_work() {
 			TransactionSource::External,
 			tx.into(),
 		)
-		.await
-		.expect("Submit fraud proof extrinsic successfully");
-	*/
+		.await;
+
+	println!("================== Submitted a valid fraud proof, Res: {res:?}");
+
+	let invalid_fraud_proof = FraudProof {
+		parent_number: parent_number_ferdie,
+		parent_hash: parent_hash_ferdie,
+		pre_state_root: *parent_header.state_root(),
+		post_state_root: Hash::random(),
+		proof: StorageProof::empty(),
+		execution_phase,
+	};
+
+	let tx = subspace_test_runtime::UncheckedExtrinsic::new_unsigned(
+		pallet_executor::Call::submit_fraud_proof { fraud_proof: invalid_fraud_proof }.into(),
+	);
+
+	let res = ferdie
+		.transaction_pool
+		.pool()
+		.submit_one(
+			&BlockId::Hash(ferdie.client.info().best_hash),
+			TransactionSource::External,
+			tx.into(),
+		)
+		.await;
+
+	println!("================== Res: {res:?}");
+
+	assert!(res.is_err(), "Submit an invalid fraud proof extrinsic");
+	panic!("=================== Submit an invalid fraud proof extrinsic!!!");
 }
 
 #[substrate_test_utils::test(flavor = "multi_thread")]

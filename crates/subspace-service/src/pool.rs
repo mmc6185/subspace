@@ -127,9 +127,11 @@ where
 
         if let Some(fraud_proof) = maybe_fraud_proof {
             // TODO: pre-validation
-            println!("========== fraud_proof: {:?}", fraud_proof);
+            println!("========== Verifying fraud_proof: {:?}", fraud_proof);
             if let Err(err) = self.verifier.verify_fraud_proof(&fraud_proof) {
                 tracing::debug!(target: "txpool", error = ?err, "Fraud proof verification failure");
+                println!("============ Fraud proof verification failure: {err:?}");
+                panic!("======== FraudProof verification error: {err:?}");
                 return async move {
                     Err(sc_transaction_pool_api::error::Error::InvalidTransaction(
                         pallet_executor::InvalidTransactionCode::FraudProof.into(),
@@ -137,6 +139,8 @@ where
                     .into())
                 }
                 .boxed();
+            } else {
+                panic!("Verify fraud proof is Ok");
             }
         }
 

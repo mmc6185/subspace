@@ -266,6 +266,7 @@ where
             heap_pages: None,
         };
 
+        println!("==================== Before [execution_proof_check] post_state_root: {post_state_root:?}");
         let execution_result = sp_state_machine::execution_proof_check::<BlakeTwo256, _, _>(
             *pre_state_root,
             proof.clone(),
@@ -277,6 +278,7 @@ where
             &runtime_code,
         )
         .map_err(VerificationError::BadProof)?;
+        println!("==================== After [execution_proof_check] post_state_root: {post_state_root:?}");
 
         let new_post_state_root =
             execution_phase.decode_execution_result::<PBlock::Header>(execution_result)?;
